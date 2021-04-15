@@ -1,70 +1,163 @@
-# Getting Started with Create React App
+# Final Project
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Install the starter project: `npm install`
 
-## Available Scripts
+**Hint**: All commands should be run in this directory!
 
-In the project directory, you can run:
+## How to use
 
-### `yarn start`
+To start server and react simultaneoustly use
+`npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+To start each separately (in two separate terminals): `npm start:server` and `npm start:front`
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Requirements
 
-### `yarn test`
+Create an application that has a login and register flow plus at least one complete CRUD interface for any entity you want.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Register**: users should enter "email", "password", "first name", "last name" and if you want accept other fields as well.
 
-### `yarn build`
+**Login** with email and password.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Validate all fields!
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Treat both exceptional and normal flows! Exceptional flows are errors. For example, if you try to create, update or delete a resource you should get an error if you are not logged in. If you mistype your password you also get an error, etc.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Display all error messages to the user!
 
-### `yarn eject`
+## Recommendations
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The entity you choose should not be trivial (like todo, post)! Have an entity with multiple fields (like movies).
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+You could have multiple related entities, this would be very apreciated. Like for example comments for posts
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+You could also have multiple entities like for example a shopping cart and products, or a favorites list for every user.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Don't let unauthorized users edit, delete or create the resource.
 
-## Learn More
+When editing the resource pre-fill the edit form.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+When deleting the resource ask for confirmation from the user (display a message with an OK and a Cancel button so that the user can cancel the delete). Maybe create a small modal.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+If you use pictures for your entity, host them somewhere else and use absolute URLs in your entity. For example store the images on flickr and use the url to display the image on the page.
 
-### Code Splitting
+## Configuring the server
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+In order for the server to protect your routes you need to configure the server by editing routes.json.
 
-### Analyzing the Bundle Size
+See the example for posts and users.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Use these numbers to control how the resource behaves (Leave users as 660, your other resources should probably be 664 but see the table below):
 
-### Making a Progressive Web App
+| Route | Resource permissions                                                                       |
+| ----- | ------------------------------------------------------------------------------------------ |
+| 664   | User must be logged to write the resource. Everyone can read the resource.                 |
+| 660   | User must be logged to write or read the resource.                                         |
+| 644   | User must own the resource to write the resource. Everyone can read the resource.          |
+| 640   | User must own the resource to write the resource.User must be logged to read the resource. |
+| 600   | User must own the resource to write or read the resource.                                  |
+| 444   | No one can write the resource. Everyone can read the resource.                             |
+| 440   | No one can write the resource. User must be logged to read the resource.                   |
+| 400   | No one can write the resource. User must own the resource to read the resource.            |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## How auth is handled
 
-### Advanced Configuration
+### Register 👥
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Any of the following routes registers a new user :
 
-### Deployment
+```
+POST /register
+POST /signup
+POST /users
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+`email` and `password` are required in the request body:
 
-### `yarn build` fails to minify
+```
+POST /register
+{
+  "email": "olivier@mail.com",
+  "password": "bestPassw0rd"
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The password is encrypted. The response contains the JWT access token (expiration time of 1 hour) :
+
+```
+201 Created
+{
+  "accessToken": "xxx.xxx.xxx"
+}
+```
+
+#### Other properties
+
+Any other property can be added to the request body without being validated :
+
+```
+POST /register
+{
+  "email": "olivier@mail.com",
+  "password": "bestPassw0rd",
+  "firstname": "Olivier",
+  "lastname": "Monge",
+  "age": 32
+}
+```
+
+#### Update
+
+Any update to an existing user (via PATCH or PUT methods) will go through the same process for email and password.
+
+### Login 🛂
+
+Any of the following routes logs an existing user in :
+
+```
+POST /login
+POST /signin
+```
+
+`email` and `password` are required, of course :
+
+```
+POST /login
+{
+  "email": "olivier@mail.com",
+  "password": "bestPassw0rd"
+}
+```
+
+The response contains the JWT access token (expiration time of 1 hour) :
+
+```
+200 OK
+{
+  "accessToken": "xxx.xxx.xxx"
+}
+```
+
+### JWT payload 📇
+
+The access token has the following claims :
+
+```
+sub : the user id (as per the JWT specs).
+email : the user email.
+```
+
+## Working with the token to get the user id
+
+`npm install jwt-decode`
+
+In your react component where you need the id just:
+
+```
+import jwt_decode from "jwt-decode";
+
+const token = "eyJ0eXAiO.../// jwt token";
+const decoded = jwt_decode(token);
+```
+
+You get the token from logging in and registering use `jwt_decode` on that.
