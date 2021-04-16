@@ -158,6 +158,26 @@ import jwt_decode from "jwt-decode";
 
 const token = "eyJ0eXAiO.../// jwt token";
 const decoded = jwt_decode(token);
+console.log(decoded);
+
+// decoded.sub is your user id a and decoded.email is obvious
 ```
 
 You get the token from logging in and registering use `jwt_decode` on that.
+
+## Sending the token to the server upon requests
+
+Configure your fetch request with the following header:
+
+```
+headers: {
+    'Authorization': 'Bearer <your token here>',
+    // Other headers...
+}
+```
+
+Yes, you leave a space after the word Bearer! The token you obtain from logging in or registering and you store in the AuthContext then use it upon every request!
+
+## Content-type
+
+The content type for your requests is `application/x-www-form-urlencoded`.
